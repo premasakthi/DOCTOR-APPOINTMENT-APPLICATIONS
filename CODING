@@ -1,0 +1,249 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.util.ArrayList;
+
+public class DoctorAppointmentApplication {
+
+    // Store all appointments
+    static ArrayList<String[]> appointments = new ArrayList<>();
+    static String loggedDoctor = "";
+
+    // Doctor List
+    static String[] doctors = {
+            "Dr. Ravi (Cardiology)",
+            "Dr. Priya (Dermatology)",
+            "Dr. Amit (Neurology)",
+            "Dr. Karthik (Orthopedics)",
+            "Dr. Meena (Pediatrics)",
+            "Dr. John (General Medicine)",
+            "Dr. Shalini (ENT Specialist)"
+    };
+
+    // ========================= HOME PAGE ============================
+    static class HomePage {
+        JFrame frame;
+
+        public HomePage() {
+            frame = new JFrame("Doctor Appointment Application - Home");
+            frame.setSize(400, 250);
+            frame.setLayout(new GridLayout(3, 1, 10, 10));
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+
+            JLabel title = new JLabel("Doctor Appointment Application", JLabel.CENTER);
+            title.setFont(new Font("Arial", Font.BOLD, 18));
+            frame.add(title);
+
+            JButton patientBtn = new JButton("Patient Login");
+            JButton doctorBtn = new JButton("Doctor Login");
+
+            frame.add(patientBtn);
+            frame.add(doctorBtn);
+
+            patientBtn.addActionListener(e -> {
+                frame.dispose();
+                new LoginPage("Patient");
+            });
+
+            doctorBtn.addActionListener(e -> {
+                frame.dispose();
+                new LoginPage("Doctor");
+            });
+
+            frame.setVisible(true);
+        }
+    }
+
+    // ========================= LOGIN PAGE ============================
+    static class LoginPage {
+        JFrame frame;
+        JTextField userField;
+        JPasswordField passField;
+        String role;
+
+        public LoginPage(String role) {
+            this.role = role;
+
+            frame = new JFrame(role + " Login");
+            frame.setSize(350, 250);
+            frame.setLayout(new GridLayout(3, 2, 10, 10));
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+
+            frame.add(new JLabel("Username:"));
+            userField = new JTextField();
+            frame.add(userField);
+
+            frame.add(new JLabel("Password:"));
+            passField = new JPasswordField();
+            frame.add(passField);
+
+            JButton loginBtn = new JButton("Login");
+            frame.add(new JLabel(""));
+            frame.add(loginBtn);
+
+            loginBtn.addActionListener(e -> verifyLogin());
+            frame.setVisible(true);
+        }
+
+        private void verifyLogin() {
+            String user = userField.getText().trim();
+            String pass = new String(passField.getPassword()).trim();
+
+            // ---------------- PATIENT LOGIN ----------------
+            if (role.equals("Patient")) {
+                if (user.equals("patient") && pass.equals("123")) {
+                    frame.dispose();
+                    new BookingPage();
+                } else {
+                    JOptionPane.showMessageDialog(frame, "Invalid Patient Credentials");
+                }
+            }
+
+            // ---------------- DOCTOR LOGIN ----------------
+            else if (role.equals("Doctor")) {
+                String[][] doctorLogins = {
+                        {"ravi", "111", "Dr. Ravi (Cardiology)"},
+                        {"priya", "222", "Dr. Priya (Dermatology)"},
+                        {"amit", "333", "Dr. Amit (Neurology)"},
+                        {"karthik", "444", "Dr. Karthik (Orthopedics)"},
+                        {"meena", "555", "Dr. Meena (Pediatrics)"},
+                        {"john", "666", "Dr. John (General Medicine)"},
+                        {"shalini", "777", "Dr. Shalini (ENT Specialist)"}
+                };
+
+                boolean match = false;
+
+                for (String[] d : doctorLogins) {
+                    if (user.equals(d[0]) && pass.equals(d[1])) {
+                        loggedDoctor = d[2];
+                        match = true;
+                        frame.dispose();
+                        new DoctorDashboard();
+                        break;
+                    }
+                }
+
+                if (!match)
+                    JOptionPane.showMessageDialog(frame, "Invalid Doctor Credentials");
+            }
+        }
+    }
+
+    // ========================= PATIENT BOOKING PAGE ============================
+    static class BookingPage {
+        JFrame frame;
+        JTextField patientField;
+        JComboBox<String> doctorBox, timeBox;
+
+        public BookingPage() {
+            frame = new JFrame("Patient - Book Appointment");
+            frame.setSize(400, 300);
+            frame.setLayout(new GridLayout(5, 2, 10, 10));
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+
+            frame.add(new JLabel("Patient Name:"));
+            patientField = new JTextField();
+            frame.add(patientField);
+
+            frame.add(new JLabel("Select Doctor:"));
+            doctorBox = new JComboBox<>(doctors);
+            frame.add(doctorBox);
+
+            frame.add(new JLabel("Select Time Slot:"));
+            timeBox = new JComboBox<>(new String[]{
+                    "9:00 AM", "9:30 AM", "10:00 AM", "10:30 AM",
+                    "11:00 AM", "11:30 AM", "1:00 PM", "1:30 PM"
+            });
+            frame.add(timeBox);
+
+            JButton bookBtn = new JButton("Book Appointment");
+            JButton homeBtn = new JButton("Home");
+
+            frame.add(bookBtn);
+            frame.add(homeBtn);
+
+            bookBtn.addActionListener(e -> bookAppointment());
+            homeBtn.addActionListener(e -> {
+                frame.dispose();
+                new HomePage();
+            });
+
+            frame.setVisible(true);
+        }
+
+        private void bookAppointment() {
+            String patient = patientField.getText().trim();
+            String doctor = doctorBox.getSelectedItem().toString();
+            String time = timeBox.getSelectedItem().toString();
+
+            if (patient.isEmpty()) {
+                JOptionPane.showMessageDialog(frame, "Enter patient name!");
+                return;
+            }
+
+            appointments.add(new String[]{patient, doctor, time});
+
+            JOptionPane.showMessageDialog(frame, "Appointment Booked Successfully!");
+            patientField.setText("");
+        }
+    }
+
+    // ========================= DOCTOR DASHBOARD ============================
+    static class DoctorDashboard {
+        JFrame frame;
+        JTextArea area;
+
+        public DoctorDashboard() {
+            frame = new JFrame(loggedDoctor + " - Appointments");
+            frame.setSize(500, 400);
+            frame.setLayout(new BorderLayout());
+            frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+            frame.setLocationRelativeTo(null);
+
+            area = new JTextArea();
+            area.setFont(new Font("Monospaced", Font.PLAIN, 14));
+            area.setEditable(false);
+
+            JButton homeBtn = new JButton("Home");
+            frame.add(homeBtn, BorderLayout.SOUTH);
+
+            homeBtn.addActionListener(e -> {
+                frame.dispose();
+                new HomePage();
+            });
+
+            JScrollPane scrollPane = new JScrollPane(area);
+            frame.add(scrollPane, BorderLayout.CENTER);
+
+            loadAppointments();
+            frame.setVisible(true);
+        }
+
+        private void loadAppointments() {
+            area.setText("");
+
+            boolean found = false;
+
+            for (String[] app : appointments) {
+                if (app[1].equals(loggedDoctor)) {
+                    area.append("Patient: " + app[0] + "\n");
+                    area.append("Time: " + app[2] + "\n");
+                    area.append("------------------------\n");
+                    found = true;
+                }
+            }
+
+            if (!found) {
+                area.setText("No appointments yet.");
+            }
+        }
+    }
+
+    // ========================= MAIN ============================
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(HomePage::new);
+    }
+}
